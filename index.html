@@ -1,30 +1,36 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | testApp</title>
+    <title>Unity WebGL Player | shanghai</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
-  </head>
-  <body>
+</head>
+<body>
     <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
+        <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
+        <div id="unity-loading-bar">
+            <div id="unity-logo"></div>
+            <div id="unity-progress-bar-empty">
+                <div id="unity-progress-bar-full"></div>
+            </div>
         </div>
-      </div>
-      <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-logo-title-footer"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">testApp</div>
-      </div>
+        <div id="unity-warning"> </div>
+        <div id="unity-footer">
+            <div id="unity-webgl-logo"></div>
+            <div id="unity-fullscreen-button"></div>
+            <div id="unity-build-title">shanghai</div>
+        </div>
     </div>
     <script>
+
+      var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+      var warningBanner = document.querySelector("#unity-warning");
 
       // Shows a temporary message banner/ribbon for a few seconds, or
       // a permanent error message on top of the canvas if type=='error'.
@@ -33,7 +39,6 @@
       // way that non-critical warnings and error messages are presented to the
       // user.
       function unityShowBanner(msg, type) {
-        var warningBanner = document.querySelector("#unity-warning");
         function updateBannerVisibility() {
           warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
         }
@@ -52,15 +57,14 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/Build.loader.js";
+      var loaderUrl = buildUrl + "/a0eb54968f12b724932ff61ec1f2137c.loader.js";
       var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/Build.data.unityweb",
-        frameworkUrl: buildUrl + "/Build.framework.js.unityweb",
-        codeUrl: buildUrl + "/Build.wasm.unityweb",
+        dataUrl: buildUrl + "/e691a3344008ca7886978a0d025f790d.data",
+        frameworkUrl: buildUrl + "/69c6ab49c1272e69d9c872e4afd58910.framework.js",
+        codeUrl: buildUrl + "/c9b948a7b119d95d7904d116180514d5.wasm",
         streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "testApp",
+        companyName: "nsym",
+        productName: "shanghai",
         productVersion: "1.0",
         showBanner: unityShowBanner,
       };
@@ -72,15 +76,6 @@
       // the canvas DOM size and WebGL render target sizes yourself.
       // config.matchWebGLToCanvasSize = false;
 
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
-
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         // Mobile device style: fill the whole browser client area with the game canvas:
 
@@ -88,7 +83,7 @@
         meta.name = 'viewport';
         meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
         document.getElementsByTagName('head')[0].appendChild(meta);
-        document.querySelector("#unity-container").className = "unity-mobile";
+        container.className = "unity-mobile";
         canvas.className = "unity-mobile";
 
         // To lower canvas resolution on mobile devices to gain some
@@ -98,30 +93,114 @@
 
       } else {
         // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
+
+        canvas.style.width = "1920px";
+        canvas.style.height = "1080px";
       }
 
-      document.querySelector("#unity-loading-bar").style.display = "block";
+      loadingBar.style.display = "block";
 
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
-                document.querySelector("#unity-loading-bar").style.display = "none";
-                document.querySelector("#unity-fullscreen-button").onclick = () => {
-                  unityInstance.SetFullscreen(1);
+        var lastProgressReport = 0; // 前回の進行度報告値
+
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+            window.location.href = 'unity:' + 'version:' + 1;
+
+            createUnityInstance(canvas, config, (progress) => {
+                // ロード進行状況をリアルタイムで更新
+                progressBarFull.style.width = 100 * progress + "%";
+
+                // 進行度が前回から10%以上進んだ場合にのみ更新を報告
+                if (progress >= lastProgressReport + 0.1) {
+                    lastProgressReport = progress; // 前回の進行度を更新
+                    updateProgress(100 * progress);
+                }
+            }).then((unityInstance) => {
+                window.unityInstance = unityInstance; // グローバル変数として設定
+                loadingBar.style.display = "none";
+                fullscreenButton.onclick = () => {
+                    unityInstance.SetFullscreen(1);
                 };
 
-              }).catch((message) => {
-                alert(message);
-              });
-            };
+                // ゲームのロード完了後にgameLoadedを呼び出す
+                gameLoaded();
+            }).catch((message) => {
+            }).catch((message) => {
+                alert("An error occurred: " + message);
+            });
+        };
+        document.body.appendChild(script);
 
-      document.body.appendChild(script);
+        function updateProgress(progress) {
+            // 小数点以下2桁までに切り捨てる
+            let progressRounded = Math.floor(progress * 100) / 100;
+            console.log("Current progress: " + progressRounded * 100 + "%");
+            // Unityへのメッセージ送信を示す
+            window.location.href = 'unity:' + 'progress:' + progressRounded;
+        }
+        function gameLoaded() {
+            console.log("Unity WebGL game is fully loaded and ready.");
+            // Unityへのメッセージ送信
+            window.location.href = "unity:" + "gameLoaded";
+            MountingConfirmation();
+        }
+        // Unityが呼び出すためのコールバック関数
+        function OnSoundPauseComplete() {
+            if (unityInstance) {
+                setTimeout(function () {
+                    unityInstance.Module.pauseMainLoop();
+                    console.log('Main loop paused after sound stopped');
+                }, 0); 
+            }
+        }
 
+        function OnSoundResumeComplete() {
+            if (unityInstance) {
+                setTimeout(function () {
+                    //unityInstance.Module.resumeMainLoop();
+                    console.log('Main loop resumed after sound started');
+                }, 0);
+            }
+        }
+
+        function pauseUnityGame() {
+            if (unityInstance) {
+                unityInstance.SendMessage('MinutesClient', 'PauseGame');
+            }
+        }
+
+        function resumeUnityGame() {
+            if (unityInstance) {
+                unityInstance.Module.resumeMainLoop();
+                unityInstance.SendMessage('MinutesClient', 'ResumeGame');
+            }
+        }
+
+        function MountingConfirmation() {
+            if (unityInstance) {
+                unityInstance.SendMessage('MinutesClient', 'MountingConfirmation');
+            }
+        }
+
+        function AlreadyMounted() {
+            window.location.href = "unity:" + "AlreadyMounted";
+        }
+
+        function checkPluginVersion() {
+            if (typeof window.pluginVersion !== 'undefined') {
+                console.log("Plugin Version: " + window.pluginVersion);
+                window.location.href = 'unity:' + 'Plugin Version:' + window.pluginVersion;
+            }
+        }
+
+        function UnityInitialized() {
+            console.log("Unity WebGL player initialized.");
+            if (typeof unityInstance !== "undefined") {
+                // Unity が初期化完了したら MountingConfirmation を呼び出す
+                unityInstance.SendMessage('MinutesClient', 'MountingConfirmation');
+            }
+        }
     </script>
-  </body>
+</body>
 </html>
